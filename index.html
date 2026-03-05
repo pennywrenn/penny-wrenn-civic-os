@@ -1,0 +1,1643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WRENN OS · pennywrenn.net</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=IBM+Plex+Mono:wght@300;400;500;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════
+   WRENN OS · SYSTEM VARIABLES
+═══════════════════════════════════════ */
+:root {
+  --os-bg: #1a1612;
+  --os-panel: #221e18;
+  --os-raised: #2a2520;
+  --os-border: #3d3728;
+  --os-border-light: #4a4235;
+  --os-text: #ede6d6;
+  --os-muted: #7a6f5c;
+  --os-dim: #4a4235;
+
+  /* Brand palette — civic tropicalism */
+  --ink: #0f0d0a;
+  --paper: #f5f0e8;
+  --chartreuse: #b8e832;
+  --vermillion: #e8391a;
+  --cerulean: #1a8fd1;
+  --marigold: #f0a820;
+  --sage: #7ab87a;
+  --plum: #8b3a8b;
+
+  /* Window chrome */
+  --win-bar: #2e2920;
+  --win-bar-active: #352f24;
+  --win-shadow: 0 24px 80px rgba(0,0,0,0.7), 0 4px 20px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04);
+
+  --font-display: 'DM Serif Display', Georgia, serif;
+  --font-mono: 'IBM Plex Mono', 'Courier New', monospace;
+  --font-ui: 'DM Sans', sans-serif;
+}
+
+/* ═══════════════════════════════════════
+   RESET + BASE
+═══════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; height: 100%; overflow: hidden; }
+
+body {
+  background: var(--os-bg);
+  color: var(--os-text);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  line-height: 1.5;
+  cursor: default;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  overflow: hidden;
+}
+
+/* Grain */
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  pointer-events: none; z-index: 9998;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.88' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23g)' opacity='1'/%3E%3C/svg%3E");
+  opacity: 0.028; mix-blend-mode: overlay;
+}
+
+/* ═══════════════════════════════════════
+   BOOT SCREEN
+═══════════════════════════════════════ */
+#boot {
+  position: fixed; inset: 0;
+  background: var(--ink);
+  z-index: 9990;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 32px;
+  transition: opacity 0.8s ease;
+}
+#boot.fade { opacity: 0; pointer-events: none; }
+
+.boot-logo {
+  text-align: center;
+}
+.boot-logotype {
+  font-family: var(--font-display);
+  font-size: 52px;
+  color: var(--paper);
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+.boot-logotype em {
+  font-style: italic;
+  color: var(--chartreuse);
+}
+.boot-sub {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--os-muted);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-top: 10px;
+}
+
+.boot-bar-wrap {
+  width: 240px;
+  height: 2px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.boot-bar {
+  height: 100%;
+  background: var(--chartreuse);
+  width: 0%;
+  transition: width 0.1s linear;
+  box-shadow: 0 0 8px var(--chartreuse);
+}
+
+.boot-log {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  color: var(--os-muted);
+  text-align: left;
+  width: 320px;
+  height: 80px;
+  overflow: hidden;
+  line-height: 1.8;
+}
+.boot-log-line { animation: logfade 0.3s ease both; }
+@keyframes logfade { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:none; } }
+
+/* ═══════════════════════════════════════
+   SYSTEM CHROME — TOP MENUBAR
+═══════════════════════════════════════ */
+#menubar {
+  position: fixed; top: 0; left: 0; right: 0;
+  height: 28px;
+  background: rgba(15,13,10,0.94);
+  backdrop-filter: blur(16px) saturate(1.2);
+  border-bottom: 1px solid rgba(61,55,40,0.8);
+  display: flex; align-items: center;
+  padding: 0 14px; gap: 0;
+  z-index: 5000;
+  opacity: 0; transition: opacity 0.6s ease 0.5s;
+}
+#menubar.show { opacity: 1; }
+
+.mb-apple {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 14px;
+  color: var(--chartreuse);
+  padding: 0 14px 0 0;
+  letter-spacing: -0.03em;
+  border-right: 1px solid var(--os-border);
+  margin-right: 6px;
+  line-height: 1;
+}
+.mb-item {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--os-text);
+  padding: 0 10px;
+  height: 28px;
+  display: flex; align-items: center;
+  cursor: default;
+  border-radius: 0;
+  transition: background 0.1s;
+  letter-spacing: 0.01em;
+  opacity: 0.85;
+}
+.mb-item:hover { background: rgba(255,255,255,0.08); opacity: 1; }
+.mb-item.bold { font-weight: 600; opacity: 1; }
+.mb-right {
+  margin-left: auto;
+  display: flex; align-items: center; gap: 8px;
+}
+.mb-status {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  color: var(--os-muted);
+  letter-spacing: 0.04em;
+  display: flex; align-items: center; gap: 6px;
+}
+.mb-pill {
+  padding: 2px 7px;
+  border-radius: 10px;
+  font-size: 8.5px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+.pill-live { background: rgba(184,232,50,0.15); color: var(--chartreuse); border: 1px solid rgba(184,232,50,0.3); }
+.pill-civic { background: rgba(26,143,209,0.15); color: var(--cerulean); border: 1px solid rgba(26,143,209,0.3); }
+#mb-clock {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--os-text);
+  padding-left: 10px;
+  border-left: 1px solid var(--os-border);
+  margin-left: 4px;
+}
+
+/* ═══════════════════════════════════════
+   WALLPAPER / DESKTOP
+═══════════════════════════════════════ */
+#desktop {
+  position: fixed; inset: 28px 0 0 0;
+  overflow: hidden;
+  opacity: 0; transition: opacity 0.8s ease 0.3s;
+}
+#desktop.show { opacity: 1; }
+
+/* Animated wallpaper — civic topology */
+.wallpaper {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 80%, rgba(184,232,50,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 85% 15%, rgba(26,143,209,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 40% at 50% 50%, rgba(232,57,26,0.03) 0%, transparent 70%),
+    linear-gradient(165deg, #1a1612 0%, #130f0c 60%, #0f0c09 100%);
+}
+
+/* Topographic lines */
+.wallpaper::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 59px, rgba(61,55,40,0.18) 60px),
+    repeating-linear-gradient(90deg, transparent, transparent 59px, rgba(61,55,40,0.12) 60px);
+  mask-image: radial-gradient(ellipse at center, black 0%, transparent 75%);
+}
+
+/* ═══════════════════════════════════════
+   DESKTOP ICONS
+═══════════════════════════════════════ */
+.icon-grid {
+  position: absolute;
+  top: 20px; right: 20px;
+  display: flex; flex-direction: column;
+  gap: 4px; align-items: center;
+  width: 80px;
+}
+
+.desk-icon {
+  width: 72px;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 5px;
+  padding: 8px 4px 6px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+  border: 1px solid transparent;
+}
+.desk-icon:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.08); }
+.desk-icon.selected { background: rgba(184,232,50,0.1); border-color: rgba(184,232,50,0.25); }
+
+.icon-face {
+  width: 44px; height: 44px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  position: relative;
+  overflow: hidden;
+}
+.icon-face::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(145deg, rgba(255,255,255,0.18) 0%, transparent 50%);
+  pointer-events: none;
+  border-radius: 10px;
+}
+.icon-label {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  color: var(--os-text);
+  text-align: center;
+  line-height: 1.2;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+  max-width: 70px;
+}
+
+/* ═══════════════════════════════════════
+   WINDOW SYSTEM
+═══════════════════════════════════════ */
+.window {
+  position: absolute;
+  background: var(--os-panel);
+  border-radius: 10px;
+  border: 1px solid var(--os-border);
+  box-shadow: var(--win-shadow);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  min-width: 320px;
+  min-height: 200px;
+  transition: box-shadow 0.2s;
+}
+.window.inactive {
+  box-shadow: 0 8px 30px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.02);
+}
+
+/* Window titlebar */
+.win-bar {
+  height: 38px;
+  background: var(--win-bar-active);
+  display: flex; align-items: center;
+  padding: 0 12px;
+  gap: 8px;
+  cursor: grab;
+  border-bottom: 1px solid var(--os-border);
+  flex-shrink: 0;
+  border-radius: 10px 10px 0 0;
+}
+.win-bar:active { cursor: grabbing; }
+.window.inactive .win-bar { background: var(--win-bar); }
+
+.win-controls {
+  display: flex; gap: 6px; align-items: center;
+}
+.wc {
+  width: 12px; height: 12px; border-radius: 50%;
+  cursor: pointer;
+  transition: filter 0.1s;
+  flex-shrink: 0;
+  border: none;
+  padding: 0;
+}
+.wc:hover { filter: brightness(1.3); }
+.wc-close { background: #ff5f56; }
+.wc-min { background: #febc2e; }
+.wc-max { background: #28c840; }
+.window.inactive .wc { filter: saturate(0) brightness(0.7); }
+
+.win-title {
+  flex: 1;
+  text-align: center;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--os-text);
+  letter-spacing: 0.01em;
+  opacity: 0.9;
+  pointer-events: none;
+}
+.window.inactive .win-title { opacity: 0.5; }
+.win-title-icon { margin-right: 5px; font-size: 12px; }
+
+/* Window content */
+.win-content {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+.win-scroll { overflow-y: auto; height: 100%; }
+.win-scroll::-webkit-scrollbar { width: 5px; }
+.win-scroll::-webkit-scrollbar-track { background: transparent; }
+.win-scroll::-webkit-scrollbar-thumb { background: var(--os-border); border-radius: 3px; }
+
+/* Resize handle */
+.win-resize {
+  position: absolute; bottom: 0; right: 0;
+  width: 16px; height: 16px;
+  cursor: nw-resize;
+  opacity: 0.3;
+  background: linear-gradient(135deg, transparent 50%, var(--os-muted) 50%, transparent 60%, var(--os-muted) 60%, transparent 70%, var(--os-muted) 70%);
+}
+
+/* ═══════════════════════════════════════
+   TASKBAR (BOTTOM DOCK)
+═══════════════════════════════════════ */
+#taskbar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  height: 60px;
+  background: rgba(15,13,10,0.88);
+  backdrop-filter: blur(24px) saturate(1.5);
+  border-top: 1px solid var(--os-border);
+  display: flex; align-items: center;
+  padding: 0 20px;
+  gap: 4px;
+  z-index: 4999;
+  opacity: 0; transition: opacity 0.6s ease 0.6s;
+}
+#taskbar.show { opacity: 1; }
+
+.tb-section { display: flex; align-items: center; gap: 4px; }
+.tb-divider {
+  width: 1px; height: 32px;
+  background: var(--os-border);
+  margin: 0 8px;
+}
+
+.tb-app {
+  width: 48px; height: 48px;
+  border-radius: 12px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 2px;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), background 0.15s;
+  position: relative;
+  border: 1px solid transparent;
+}
+.tb-app:hover { transform: translateY(-6px) scale(1.1); background: rgba(255,255,255,0.06); }
+.tb-app.running::after {
+  content: '';
+  position: absolute; bottom: -4px; left: 50%; transform: translateX(-50%);
+  width: 4px; height: 4px; border-radius: 50%;
+  background: var(--chartreuse);
+  box-shadow: 0 0 4px var(--chartreuse);
+}
+.tb-app.active { background: rgba(184,232,50,0.1); border-color: rgba(184,232,50,0.2); }
+
+.tb-icon-face {
+  width: 36px; height: 36px;
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  position: relative;
+  overflow: hidden;
+}
+.tb-icon-face::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(145deg, rgba(255,255,255,0.2) 0%, transparent 55%);
+  border-radius: inherit;
+}
+
+.tb-app-name {
+  font-family: var(--font-mono);
+  font-size: 6.5px;
+  color: var(--os-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  pointer-events: none;
+}
+
+/* ═══════════════════════════════════════
+   APP: PENNY WRENN MEDIA — ABOUT
+═══════════════════════════════════════ */
+.app-about {
+  padding: 28px 28px 32px;
+  background: var(--os-panel);
+  height: 100%;
+  overflow-y: auto;
+}
+.app-about::-webkit-scrollbar { width: 4px; }
+.app-about::-webkit-scrollbar-thumb { background: var(--os-border); border-radius: 2px; }
+
+.about-masthead {
+  margin-bottom: 28px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--os-border);
+  position: relative;
+}
+.about-kicker {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--vermillion);
+  margin-bottom: 10px;
+}
+.about-h1 {
+  font-family: var(--font-display);
+  font-size: 38px;
+  line-height: 1.08;
+  color: var(--os-text);
+  letter-spacing: -0.02em;
+  margin-bottom: 14px;
+}
+.about-h1 em { font-style: italic; color: var(--chartreuse); }
+.about-body {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  line-height: 1.75;
+  color: var(--os-muted);
+  max-width: 520px;
+}
+.about-body strong { color: var(--os-text); font-weight: 500; }
+
+.mission-bar {
+  margin-top: 20px;
+  padding: 14px 18px;
+  background: rgba(184,232,50,0.05);
+  border: 1px solid rgba(184,232,50,0.15);
+  border-radius: 6px;
+  border-left: 3px solid var(--chartreuse);
+}
+.mission-bar p {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 14px;
+  color: var(--os-text);
+  line-height: 1.5;
+  opacity: 0.9;
+}
+
+.divisions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 20px;
+}
+.division-card {
+  background: var(--os-raised);
+  border: 1px solid var(--os-border);
+  border-radius: 6px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.division-card:hover { border-color: var(--os-border-light); background: #2e2820; }
+.div-accent { width: 20px; height: 3px; border-radius: 2px; margin-bottom: 10px; }
+.div-title {
+  font-family: var(--font-ui);
+  font-size: 12px; font-weight: 600;
+  color: var(--os-text);
+  margin-bottom: 4px;
+}
+.div-sub {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--os-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  line-height: 1.5;
+}
+
+/* ═══════════════════════════════════════
+   APP: MAGAZINES
+═══════════════════════════════════════ */
+.app-mags {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  height: 100%;
+  overflow: hidden;
+}
+.mag-list {
+  border-right: 1px solid var(--os-border);
+  overflow-y: auto;
+  padding: 0;
+}
+.mag-list::-webkit-scrollbar { width: 3px; }
+.mag-list::-webkit-scrollbar-thumb { background: var(--os-border); }
+
+.mag-section-head {
+  padding: 10px 16px 6px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--os-muted);
+  border-bottom: 1px solid var(--os-border);
+  background: rgba(0,0,0,0.2);
+  position: sticky; top: 0;
+}
+
+.mag-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(61,55,40,0.4);
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.mag-item:hover { background: var(--os-raised); }
+.mag-item.active { background: rgba(184,232,50,0.06); border-left: 2px solid var(--chartreuse); }
+
+.mag-cover {
+  width: 36px; height: 48px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  position: relative;
+  overflow: hidden;
+}
+.mag-cover::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.12) 0%, transparent 40%);
+}
+.mag-meta { flex: 1; min-width: 0; }
+.mag-title {
+  font-family: var(--font-ui);
+  font-size: 12px; font-weight: 600;
+  color: var(--os-text);
+  line-height: 1.3;
+  margin-bottom: 3px;
+}
+.mag-issue {
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  color: var(--os-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.mag-tag {
+  display: inline-block; margin-top: 5px;
+  padding: 1.5px 5px;
+  border-radius: 2px;
+  font-family: var(--font-mono);
+  font-size: 7.5px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  color: #000;
+}
+
+.mag-preview {
+  padding: 24px 20px;
+  overflow-y: auto;
+  display: flex; flex-direction: column;
+  gap: 16px;
+}
+.mag-preview::-webkit-scrollbar { width: 3px; }
+.mag-preview::-webkit-scrollbar-thumb { background: var(--os-border); }
+
+.preview-big-cover {
+  width: 100%; height: 160px;
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 48px;
+  position: relative;
+  overflow: hidden;
+}
+.preview-big-cover .cover-text {
+  position: absolute; bottom: 12px; left: 14px; right: 14px;
+  font-family: var(--font-display); font-style: italic;
+  font-size: 18px; color: rgba(255,255,255,0.95);
+  line-height: 1.2;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+}
+.preview-tagline {
+  font-family: var(--font-display); font-style: italic;
+  font-size: 15px; color: var(--os-text); line-height: 1.5;
+}
+.preview-body {
+  font-size: 11.5px; color: var(--os-muted); line-height: 1.7;
+}
+.preview-cta {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 16px;
+  background: var(--chartreuse);
+  color: #000;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: filter 0.15s;
+  width: fit-content;
+  border: none;
+}
+.preview-cta:hover { filter: brightness(1.1); }
+
+/* ═══════════════════════════════════════
+   APP: ARCHIVE FILMS
+═══════════════════════════════════════ */
+.app-films {
+  padding: 0;
+  height: 100%;
+  display: flex; flex-direction: column;
+}
+.films-header {
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--os-border);
+  display: flex; align-items: baseline; gap: 12px;
+  flex-shrink: 0;
+}
+.films-h {
+  font-family: var(--font-display); font-style: italic;
+  font-size: 20px; color: var(--os-text);
+}
+.films-count {
+  font-family: var(--font-mono); font-size: 9px;
+  color: var(--os-muted); text-transform: uppercase; letter-spacing: 0.08em;
+}
+.films-grid {
+  flex: 1; overflow-y: auto;
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px; padding: 14px;
+  align-content: start;
+}
+.films-grid::-webkit-scrollbar { width: 3px; }
+.films-grid::-webkit-scrollbar-thumb { background: var(--os-border); }
+
+.film-card {
+  border-radius: 5px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  background: var(--os-raised);
+  border: 1px solid var(--os-border);
+}
+.film-card:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,0,0,0.6); }
+.film-thumb {
+  height: 80px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px;
+  position: relative;
+  overflow: hidden;
+}
+.film-thumb::after {
+  content: '▶';
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.45);
+  font-size: 16px; color: rgba(255,255,255,0.9);
+  opacity: 0; transition: opacity 0.2s;
+}
+.film-card:hover .film-thumb::after { opacity: 1; }
+.film-meta { padding: 8px 10px; }
+.film-title {
+  font-family: var(--font-ui); font-size: 11px; font-weight: 500;
+  color: var(--os-text); line-height: 1.3; margin-bottom: 3px;
+}
+.film-dur {
+  font-family: var(--font-mono); font-size: 8.5px;
+  color: var(--os-muted); display: flex; align-items: center; gap: 5px;
+}
+.film-badge {
+  padding: 1.5px 4px;
+  border-radius: 2px;
+  font-size: 7px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+
+/* ═══════════════════════════════════════
+   APP: COURSES / PRACTICUMS
+═══════════════════════════════════════ */
+.app-courses {
+  display: grid; grid-template-columns: 200px 1fr;
+  height: 100%; overflow: hidden;
+}
+.courses-nav {
+  border-right: 1px solid var(--os-border);
+  overflow-y: auto; padding: 12px 0;
+}
+.cn-label {
+  padding: 6px 14px 3px;
+  font-family: var(--font-mono); font-size: 8.5px;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--os-muted);
+}
+.cn-item {
+  padding: 7px 14px;
+  font-family: var(--font-ui); font-size: 12px;
+  color: var(--os-muted); cursor: pointer;
+  transition: all 0.1s;
+  border-left: 2px solid transparent;
+  display: flex; align-items: center; gap: 7px;
+}
+.cn-item:hover { background: var(--os-raised); color: var(--os-text); }
+.cn-item.active { color: var(--chartreuse); border-left-color: var(--chartreuse); background: rgba(184,232,50,0.05); }
+.cn-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+.courses-main { overflow-y: auto; padding: 20px 22px; }
+.courses-main::-webkit-scrollbar { width: 3px; }
+.courses-main::-webkit-scrollbar-thumb { background: var(--os-border); }
+
+.course-hero-label {
+  font-family: var(--font-mono); font-size: 9px;
+  text-transform: uppercase; letter-spacing: 0.15em;
+  color: var(--vermillion); margin-bottom: 8px;
+}
+.course-hero-title {
+  font-family: var(--font-display); font-style: italic;
+  font-size: 26px; line-height: 1.15;
+  color: var(--os-text); margin-bottom: 10px;
+}
+.course-hero-sub {
+  font-size: 12px; color: var(--os-muted);
+  line-height: 1.65; max-width: 480px; margin-bottom: 20px;
+}
+
+.course-list { display: flex; flex-direction: column; gap: 8px; }
+.course-row {
+  background: var(--os-raised);
+  border: 1px solid var(--os-border);
+  border-radius: 5px; padding: 12px 14px;
+  cursor: pointer; display: flex;
+  align-items: center; gap: 12px;
+  transition: border-color 0.15s, background 0.15s;
+}
+.course-row:hover { border-color: var(--os-border-light); background: #2e2820; }
+.course-num {
+  font-family: var(--font-mono); font-size: 10px;
+  color: var(--os-muted); width: 24px; flex-shrink: 0;
+  text-align: right;
+}
+.course-info { flex: 1; }
+.course-title {
+  font-family: var(--font-ui); font-size: 12.5px; font-weight: 500;
+  color: var(--os-text); margin-bottom: 2px;
+}
+.course-meta {
+  font-family: var(--font-mono); font-size: 9px;
+  color: var(--os-muted); text-transform: uppercase; letter-spacing: 0.05em;
+  display: flex; gap: 10px;
+}
+.course-type {
+  padding: 2px 6px; border-radius: 2px;
+  font-family: var(--font-mono); font-size: 8px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.05em;
+  flex-shrink: 0;
+}
+.type-practicum { background: rgba(26,143,209,0.2); color: var(--cerulean); }
+.type-micro { background: rgba(240,168,32,0.2); color: var(--marigold); }
+.type-explainer { background: rgba(122,184,122,0.2); color: var(--sage); }
+
+/* ═══════════════════════════════════════
+   APP: CIVIC OS DASHBOARD
+═══════════════════════════════════════ */
+.app-civic {
+  padding: 0; height: 100%;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.civic-header {
+  padding: 16px 20px 14px;
+  border-bottom: 1px solid var(--os-border);
+  background: rgba(26,143,209,0.05);
+  flex-shrink: 0;
+}
+.civic-h { font-family: var(--font-display); font-style: italic; font-size: 18px; color: var(--os-text); margin-bottom: 4px; }
+.civic-sub { font-family: var(--font-mono); font-size: 9px; color: var(--cerulean); text-transform: uppercase; letter-spacing: 0.1em; }
+
+.civic-grid {
+  flex: 1; overflow-y: auto;
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 10px; padding: 14px;
+  align-content: start;
+}
+.civic-grid::-webkit-scrollbar { width: 3px; }
+.civic-grid::-webkit-scrollbar-thumb { background: var(--os-border); }
+
+.civic-card {
+  background: var(--os-raised);
+  border: 1px solid var(--os-border);
+  border-radius: 6px; padding: 14px 16px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.civic-card:hover { border-color: var(--cerulean); }
+.civic-card-accent { height: 2px; border-radius: 2px; margin-bottom: 12px; }
+.civic-card-title {
+  font-family: var(--font-ui); font-size: 12px; font-weight: 600;
+  color: var(--os-text); margin-bottom: 5px;
+}
+.civic-card-stat {
+  font-family: var(--font-display); font-size: 28px;
+  color: var(--chartreuse); line-height: 1; margin-bottom: 4px;
+}
+.civic-card-label {
+  font-family: var(--font-mono); font-size: 9px;
+  color: var(--os-muted); text-transform: uppercase; letter-spacing: 0.06em;
+}
+
+.civic-full {
+  grid-column: 1 / -1;
+  background: var(--os-raised);
+  border: 1px solid var(--os-border);
+  border-radius: 6px; padding: 14px 16px;
+}
+.civic-domains-row {
+  display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px;
+}
+.civic-domain-chip {
+  padding: 3px 8px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--os-border);
+  border-radius: 3px;
+  font-family: var(--font-mono); font-size: 9px;
+  color: var(--os-muted); cursor: pointer;
+  transition: all 0.1s;
+}
+.civic-domain-chip:hover { background: rgba(184,232,50,0.08); color: var(--chartreuse); border-color: rgba(184,232,50,0.2); }
+
+/* ═══════════════════════════════════════
+   CONTEXT MENU
+═══════════════════════════════════════ */
+#ctx-menu {
+  position: fixed;
+  background: rgba(30,27,20,0.96);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--os-border);
+  border-radius: 8px;
+  padding: 5px;
+  min-width: 180px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.7), 0 0 0 0.5px rgba(255,255,255,0.05);
+  z-index: 9000;
+  display: none;
+  animation: ctxin 0.12s ease;
+}
+@keyframes ctxin {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+.ctx-item {
+  padding: 6px 11px;
+  border-radius: 4px;
+  font-family: var(--font-ui); font-size: 12px;
+  color: var(--os-text); cursor: pointer;
+  display: flex; align-items: center; gap: 8px;
+  transition: background 0.08s;
+}
+.ctx-item:hover { background: rgba(255,255,255,0.08); }
+.ctx-item.accent:hover { background: rgba(184,232,50,0.12); color: var(--chartreuse); }
+.ctx-sep { height: 1px; background: var(--os-border); margin: 4px 2px; }
+.ctx-icon { width: 14px; text-align: center; font-size: 12px; opacity: 0.8; }
+.ctx-shortcut { margin-left: auto; font-family: var(--font-mono); font-size: 10px; color: var(--os-muted); }
+
+/* ═══════════════════════════════════════
+   NOTIFICATION TOAST
+═══════════════════════════════════════ */
+.toast {
+  position: fixed; top: 42px; right: 14px;
+  width: 280px;
+  background: rgba(34,30,24,0.96);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--os-border);
+  border-radius: 10px; padding: 12px 14px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+  z-index: 8000;
+  transform: translateX(320px);
+  transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  display: flex; gap: 10px; align-items: flex-start;
+}
+.toast.show { transform: translateX(0); }
+.toast-icon {
+  width: 36px; height: 36px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+}
+.toast-body { flex: 1; }
+.toast-app {
+  font-family: var(--font-mono); font-size: 8.5px;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--os-muted); margin-bottom: 2px;
+}
+.toast-msg {
+  font-family: var(--font-ui); font-size: 12px;
+  color: var(--os-text); line-height: 1.4;
+}
+
+/* ═══════════════════════════════════════
+   SYSTEM FONT / UTIL
+═══════════════════════════════════════ */
+.mono { font-family: var(--font-mono); }
+.serif { font-family: var(--font-display); }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     BOOT SCREEN
+══════════════════════════════════════ -->
+<div id="boot">
+  <div class="boot-logo">
+    <div class="boot-logotype"><em>Wrenn</em> OS</div>
+    <div class="boot-sub">Penny Wrenn Media · Build 2026.03.05</div>
+  </div>
+  <div class="boot-bar-wrap"><div class="boot-bar" id="boot-bar"></div></div>
+  <div class="boot-log" id="boot-log"></div>
+</div>
+
+<!-- ══════════════════════════════════════
+     MENUBAR
+══════════════════════════════════════ -->
+<div id="menubar">
+  <div class="mb-apple">ꟷ</div>
+  <div class="mb-item bold" id="mb-appname">Finder</div>
+  <div class="mb-item">File</div>
+  <div class="mb-item">Edit</div>
+  <div class="mb-item">View</div>
+  <div class="mb-item">Window</div>
+  <div class="mb-item">Help</div>
+  <div class="mb-right">
+    <div class="mb-status">
+      <span class="mb-pill pill-live">● Live</span>
+      <span class="mb-pill pill-civic">CivicOS</span>
+    </div>
+    <div id="mb-clock">12:10 PM</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     DESKTOP
+══════════════════════════════════════ -->
+<div id="desktop">
+  <div class="wallpaper"></div>
+
+  <!-- Desktop icons -->
+  <div class="icon-grid">
+    <div class="desk-icon" ondblclick="openApp('about')" oncontextmenu="showCtx(event,'desktop')">
+      <div class="icon-face" style="background:linear-gradient(145deg,#1a2a0a,#2a3a10)">🌿</div>
+      <div class="icon-label">Penny Wrenn<br>Media</div>
+    </div>
+    <div class="desk-icon" ondblclick="openApp('mags')">
+      <div class="icon-face" style="background:linear-gradient(145deg,#2a1a0a,#3a2010)">📰</div>
+      <div class="icon-label">Publications</div>
+    </div>
+    <div class="desk-icon" ondblclick="openApp('films')">
+      <div class="icon-face" style="background:linear-gradient(145deg,#0a1a2a,#102030)">🎞</div>
+      <div class="icon-label">Archive<br>Films</div>
+    </div>
+    <div class="desk-icon" ondblclick="openApp('courses')">
+      <div class="icon-face" style="background:linear-gradient(145deg,#1a0a2a,#201030)">🧭</div>
+      <div class="icon-label">Practicums</div>
+    </div>
+    <div class="desk-icon" ondblclick="openApp('civic')">
+      <div class="icon-face" style="background:linear-gradient(145deg,#0a1a1a,#102020)">🏛</div>
+      <div class="icon-label">Civic OS</div>
+    </div>
+  </div>
+
+  <!-- Windows rendered here -->
+  <div id="windows"></div>
+</div>
+
+<!-- ══════════════════════════════════════
+     TASKBAR
+══════════════════════════════════════ -->
+<div id="taskbar">
+  <div class="tb-section">
+    <!-- Finder -->
+    <div class="tb-app" id="tb-finder" title="Finder" onclick="openApp('about')">
+      <div class="tb-icon-face" style="background:linear-gradient(145deg,#1a2a0a,#2a3a10)">🌿</div>
+      <div class="tb-app-name">Media</div>
+    </div>
+  </div>
+  <div class="tb-divider"></div>
+  <div class="tb-section" id="tb-apps-section">
+    <!-- app icons -->
+    <div class="tb-app" id="tb-mags" title="Publications" onclick="openApp('mags')">
+      <div class="tb-icon-face" style="background:linear-gradient(145deg,#2a1a0a,#3a2010)">📰</div>
+      <div class="tb-app-name">Pubs</div>
+    </div>
+    <div class="tb-app" id="tb-films" title="Archive Films" onclick="openApp('films')">
+      <div class="tb-icon-face" style="background:linear-gradient(145deg,#0a1a2a,#102030)">🎞</div>
+      <div class="tb-app-name">Films</div>
+    </div>
+    <div class="tb-app" id="tb-courses" title="Practicums" onclick="openApp('courses')">
+      <div class="tb-icon-face" style="background:linear-gradient(145deg,#1a0a2a,#201030)">🧭</div>
+      <div class="tb-app-name">Courses</div>
+    </div>
+    <div class="tb-app" id="tb-civic" title="Civic OS" onclick="openApp('civic')">
+      <div class="tb-icon-face" style="background:linear-gradient(145deg,#0a1a1a,#102020)">🏛</div>
+      <div class="tb-app-name">CivicOS</div>
+    </div>
+  </div>
+  <div class="tb-divider"></div>
+  <div class="tb-section">
+    <!-- Trash -->
+    <div class="tb-app" title="Search" onclick="showToast('search','🔍','Wrenn Search','Full-text search across all publications, films, and practicums — coming in next build.')">
+      <div class="tb-icon-face" style="background:linear-gradient(145deg,#1a1410,#252018)">🔍</div>
+      <div class="tb-app-name">Search</div>
+    </div>
+    <div class="tb-app" title="Signal / Subscribe" onclick="showToast('signal','📡','Signal','Subscribe to modular content streams — individual, local, national.')">
+      <div class="tb-icon-face" style="background:linear-gradient(145deg,#0a1a08,#101808)">📡</div>
+      <div class="tb-app-name">Signal</div>
+    </div>
+  </div>
+</div>
+
+<!-- CONTEXT MENU -->
+<div id="ctx-menu">
+  <div class="ctx-item accent" onclick="openApp('about');closeCtx()"><span class="ctx-icon">🌿</span>About Penny Wrenn Media</div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item" onclick="openApp('mags');closeCtx()"><span class="ctx-icon">📰</span>Open Publications<span class="ctx-shortcut">⌘P</span></div>
+  <div class="ctx-item" onclick="openApp('films');closeCtx()"><span class="ctx-icon">🎞</span>Open Archive Films<span class="ctx-shortcut">⌘F</span></div>
+  <div class="ctx-item" onclick="openApp('courses');closeCtx()"><span class="ctx-icon">🧭</span>Open Practicums<span class="ctx-shortcut">⌘E</span></div>
+  <div class="ctx-item" onclick="openApp('civic');closeCtx()"><span class="ctx-icon">🏛</span>Open Civic OS<span class="ctx-shortcut">⌘G</span></div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item" onclick="closeCtx()"><span class="ctx-icon">🖥</span>Change Wallpaper</div>
+  <div class="ctx-item" onclick="closeCtx()"><span class="ctx-icon">⚙️</span>System Preferences</div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <div class="toast-icon" id="toast-icon" style="background:rgba(184,232,50,0.1)">📡</div>
+  <div class="toast-body">
+    <div class="toast-app" id="toast-app">Signal</div>
+    <div class="toast-msg" id="toast-msg">Loading…</div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════
+   BOOT SEQUENCE
+═══════════════════════════════════════ */
+const bootLines = [
+  'WRENN OS kernel 2026.03.05 loading…',
+  'Mounting civic infrastructure modules…',
+  'Initializing media conglomerate layer…',
+  'Loading plurality preservation engine…',
+  'Connecting to distributed archive…',
+  'Handshake: dementia.network · power2026 · searchjourney',
+  'Compiling 101freeideas index…',
+  'Plurality engine: READY',
+  'Desktop environment starting…',
+];
+const bootLog = document.getElementById('boot-log');
+const bootBarEl = document.getElementById('boot-bar');
+let bIdx = 0;
+
+function bootStep() {
+  if (bIdx >= bootLines.length) {
+    bootBarEl.style.width = '100%';
+    setTimeout(() => {
+      document.getElementById('boot').classList.add('fade');
+      document.getElementById('menubar').classList.add('show');
+      document.getElementById('desktop').classList.add('show');
+      document.getElementById('taskbar').classList.add('show');
+      setTimeout(() => {
+        document.getElementById('boot').style.display = 'none';
+        openApp('about');
+        setTimeout(() => showToast('civic','🏛','Civic OS','Plurality engine active — 36 domains, 6 clusters online.'), 1200);
+      }, 900);
+    }, 400);
+    return;
+  }
+  const line = document.createElement('div');
+  line.className = 'boot-log-line';
+  line.textContent = '> ' + bootLines[bIdx];
+  bootLog.appendChild(line);
+  bootLog.scrollTop = bootLog.scrollHeight;
+  bootBarEl.style.width = ((bIdx+1) / bootLines.length * 100) + '%';
+  bIdx++;
+  setTimeout(bootStep, bIdx < 4 ? 180 : bIdx < 7 ? 120 : 80);
+}
+setTimeout(bootStep, 400);
+
+/* ═══════════════════════════════════════
+   CLOCK
+═══════════════════════════════════════ */
+function updateClock() {
+  document.getElementById('mb-clock').textContent = new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+}
+updateClock(); setInterval(updateClock, 15000);
+
+/* ═══════════════════════════════════════
+   WINDOW MANAGER
+═══════════════════════════════════════ */
+let zTop = 100;
+const openWindows = {};
+
+const appDefs = {
+  about: {
+    title: 'Penny Wrenn Media',
+    icon: '🌿',
+    w: 560, h: 480,
+    x: 60, y: 40,
+    render: renderAbout
+  },
+  mags: {
+    title: 'Publications',
+    icon: '📰',
+    w: 640, h: 460,
+    x: 120, y: 60,
+    render: renderMags
+  },
+  films: {
+    title: 'Archive Films',
+    icon: '🎞',
+    w: 580, h: 440,
+    x: 160, y: 80,
+    render: renderFilms
+  },
+  courses: {
+    title: 'Practicums & Microcourses',
+    icon: '🧭',
+    w: 600, h: 460,
+    x: 180, y: 55,
+    render: renderCourses
+  },
+  civic: {
+    title: 'Civic OS Dashboard',
+    icon: '🏛',
+    w: 540, h: 420,
+    x: 200, y: 70,
+    render: renderCivic
+  },
+};
+
+function openApp(id) {
+  if (openWindows[id]) {
+    focusWindow(id); return;
+  }
+  const def = appDefs[id];
+  const win = document.createElement('div');
+  win.className = 'window';
+  win.id = 'win-' + id;
+  win.style.cssText = `width:${def.w}px;height:${def.h}px;left:${def.x}px;top:${def.y}px;z-index:${++zTop}`;
+  win.innerHTML = `
+    <div class="win-bar" id="winbar-${id}">
+      <div class="win-controls">
+        <button class="wc wc-close" onclick="closeApp('${id}')"></button>
+        <button class="wc wc-min" onclick="minApp('${id}')"></button>
+        <button class="wc wc-max" onclick="maxApp('${id}')"></button>
+      </div>
+      <div class="win-title"><span class="win-title-icon">${def.icon}</span>${def.title}</div>
+      <div style="width:52px"></div>
+    </div>
+    <div class="win-content" id="wincontent-${id}"></div>
+    <div class="win-resize"></div>
+  `;
+
+  document.getElementById('windows').appendChild(win);
+  openWindows[id] = {win, minimized: false, maxed: false, prevGeom: null};
+
+  // fill content
+  def.render(document.getElementById('wincontent-' + id));
+
+  // drag
+  makeDraggable(win, document.getElementById('winbar-' + id));
+  makeResizable(win);
+
+  // focus on click
+  win.addEventListener('mousedown', () => focusWindow(id));
+
+  // taskbar indicator
+  const tb = document.getElementById('tb-' + id);
+  if (tb) tb.classList.add('running', 'active');
+
+  // update menubar
+  document.getElementById('mb-appname').textContent = def.title;
+
+  // entrance animation
+  win.style.opacity = '0';
+  win.style.transform = 'scale(0.94) translateY(8px)';
+  win.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
+  requestAnimationFrame(() => {
+    win.style.opacity = '1';
+    win.style.transform = 'none';
+    setTimeout(() => win.style.transition = '', 200);
+  });
+}
+
+function focusWindow(id) {
+  Object.keys(openWindows).forEach(k => {
+    const w = openWindows[k].win;
+    w.classList.add('inactive');
+    const tb = document.getElementById('tb-'+k);
+    if (tb) tb.classList.remove('active');
+  });
+  const w = openWindows[id].win;
+  w.classList.remove('inactive');
+  w.style.zIndex = ++zTop;
+  const tb = document.getElementById('tb-'+id);
+  if (tb) tb.classList.add('active');
+  document.getElementById('mb-appname').textContent = appDefs[id].title;
+}
+
+function closeApp(id) {
+  const entry = openWindows[id];
+  if (!entry) return;
+  const w = entry.win;
+  w.style.transition = 'opacity 0.15s ease, transform 0.15s ease';
+  w.style.opacity = '0';
+  w.style.transform = 'scale(0.95)';
+  setTimeout(() => {
+    w.remove();
+    delete openWindows[id];
+    const tb = document.getElementById('tb-'+id);
+    if (tb) tb.classList.remove('running','active');
+    document.getElementById('mb-appname').textContent = 'Finder';
+  }, 150);
+}
+
+function minApp(id) {
+  const entry = openWindows[id];
+  if (!entry) return;
+  entry.minimized = !entry.minimized;
+  entry.win.style.transform = entry.minimized ? 'scale(0) translateY(100px)' : 'none';
+  entry.win.style.transition = 'transform 0.25s cubic-bezier(0.34,1.56,0.64,1)';
+  entry.win.style.opacity = entry.minimized ? '0' : '1';
+}
+
+function maxApp(id) {
+  const entry = openWindows[id];
+  if (!entry) return;
+  const w = entry.win;
+  if (!entry.maxed) {
+    entry.prevGeom = {left:w.style.left, top:w.style.top, width:w.style.width, height:w.style.height};
+    w.style.transition = 'all 0.25s ease';
+    w.style.left = '0'; w.style.top = '0';
+    w.style.width = '100%';
+    w.style.height = (window.innerHeight - 28 - 60) + 'px';
+    entry.maxed = true;
+  } else {
+    const pg = entry.prevGeom;
+    w.style.left = pg.left; w.style.top = pg.top;
+    w.style.width = pg.width; w.style.height = pg.height;
+    entry.maxed = false;
+    setTimeout(() => w.style.transition = '', 250);
+  }
+}
+
+/* ═══════════════════════════════════════
+   DRAG + RESIZE
+═══════════════════════════════════════ */
+function makeDraggable(win, handle) {
+  let sx, sy, ox, oy, dragging = false;
+  handle.addEventListener('mousedown', e => {
+    if (e.target.classList.contains('wc')) return;
+    dragging = true;
+    sx = e.clientX; sy = e.clientY;
+    ox = win.offsetLeft; oy = win.offsetTop;
+    handle.style.cursor = 'grabbing';
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    win.style.left = Math.max(0, ox + e.clientX - sx) + 'px';
+    win.style.top = Math.max(0, oy + e.clientY - sy) + 'px';
+  });
+  document.addEventListener('mouseup', () => { dragging = false; handle.style.cursor = 'grab'; });
+}
+
+function makeResizable(win) {
+  const handle = win.querySelector('.win-resize');
+  let sx, sy, sw, sh, resizing = false;
+  handle.addEventListener('mousedown', e => {
+    resizing = true;
+    sx = e.clientX; sy = e.clientY;
+    sw = win.offsetWidth; sh = win.offsetHeight;
+    e.preventDefault(); e.stopPropagation();
+  });
+  document.addEventListener('mousemove', e => {
+    if (!resizing) return;
+    win.style.width = Math.max(320, sw + e.clientX - sx) + 'px';
+    win.style.height = Math.max(200, sh + e.clientY - sy) + 'px';
+  });
+  document.addEventListener('mouseup', () => { resizing = false; });
+}
+
+/* ═══════════════════════════════════════
+   APP CONTENT RENDERERS
+═══════════════════════════════════════ */
+function renderAbout(el) {
+  el.innerHTML = `
+  <div class="win-scroll">
+  <div class="app-about">
+    <div class="about-masthead">
+      <div class="about-kicker">Penny Wrenn Media · Est. 2024 · Philadelphia, PA</div>
+      <div class="about-h1">A human-<em>engineered</em><br>internet company.</div>
+      <div class="about-body">
+        <strong>Penny Wrenn Media</strong> is a media conglomerate building constructive digital artifacts at the intersection of machine learning, civic infrastructure, and intergenerational storytelling. Every product, publication, and practicum returns to a single thesis: <strong>plurality</strong> — the preservation of individual, local, and national American life, liberty, and legacy.
+      </div>
+      <div class="mission-bar">
+        <p>"We build with AI. We build for humans. The internet belongs to the people who remember what it was for."</p>
+      </div>
+    </div>
+    <div class="divisions-grid">
+      <div class="division-card" ondblclick="openApp('mags')">
+        <div class="div-accent" style="background:var(--vermillion)"></div>
+        <div class="div-title">Publications</div>
+        <div class="div-sub">Digital magazines · issue-based<br>editorial · civic & cultural</div>
+      </div>
+      <div class="division-card" ondblclick="openApp('films')">
+        <div class="div-accent" style="background:var(--cerulean)"></div>
+        <div class="div-title">Archive Films</div>
+        <div class="div-sub">Mobile archival + AI-generated<br>moving image · pay-to-download</div>
+      </div>
+      <div class="division-card" ondblclick="openApp('courses')">
+        <div class="div-accent" style="background:var(--marigold)"></div>
+        <div class="div-title">Practicums</div>
+        <div class="div-sub">Microcourses · explainers<br>niche-targeted edtech modules</div>
+      </div>
+      <div class="division-card" ondblclick="openApp('civic')">
+        <div class="div-accent" style="background:var(--chartreuse)"></div>
+        <div class="div-title">Civic OS</div>
+        <div class="div-sub">Infrastructure dashboard<br>for plurality & lifespan mgmt</div>
+      </div>
+      <div class="division-card" style="grid-column:1/-1">
+        <div class="div-accent" style="background:var(--sage)"></div>
+        <div class="div-title">Distributed Streaming</div>
+        <div class="div-sub">Voice + video · cross-platform social channels · webinar production · live civic programming</div>
+      </div>
+    </div>
+  </div>
+  </div>`;
+}
+
+const magazines = [
+  { title: 'Dementia Doesn\'t Deserve This', issue: 'Vol. 3 — Spring 2026', tag: 'Advocacy', color: '#8b3a8b', emoji: '🧠', desc: 'A magazine about caregiving, systemic failure, and what comes next. Built on community testimony and clinical data.', bg: 'linear-gradient(145deg,#2a1040,#1a0828)' },
+  { title: 'Midlife, Actually', issue: 'Vol. 1 — Q1 2026', tag: 'Culture', color: '#f0a820', emoji: '🌅', desc: 'The magazine nobody was making. For the generation stuck between peak responsibility and uncharted reinvention.', bg: 'linear-gradient(145deg,#2a1a00,#1a1000)' },
+  { title: 'Power 2026', issue: 'Issue 2 — March', tag: 'Civic', color: '#1a8fd1', emoji: '🗳', desc: 'A civic activation publication. Election literacy, local governance, and the tools of participatory democracy.', bg: 'linear-gradient(145deg,#001a2a,#001018)' },
+  { title: '101 Free Ideas', issue: 'Open Edition', tag: 'Ideas', color: '#b8e832', emoji: '💡', desc: 'An open-source magazine of ideas free for public use. Community-submitted, Penny Wrenn-curated.', bg: 'linear-gradient(145deg,#1a2200,#101800)' },
+  { title: 'Search Journey', issue: 'Vol. 2', tag: 'Discovery', color: '#7ab87a', emoji: '🧭', desc: 'Navigating the post-algorithmic web. A magazine about where we go, how we find it, and what gets lost.', bg: 'linear-gradient(145deg,#001a10,#001008)' },
+  { title: 'Worried About The Wrong Thing', issue: 'Pilot Issue', tag: 'Reframe', color: '#e8391a', emoji: '🔄', desc: 'Contrarian long-reads that reframe the conversations everyone is having but nobody is finishing.', bg: 'linear-gradient(145deg,#2a0800,#1a0400)' },
+];
+
+function renderMags(el) {
+  el.style.height = '100%';
+  el.innerHTML = `<div class="app-mags">
+    <div class="mag-list">
+      <div class="mag-section-head">// publications (${magazines.length})</div>
+      ${magazines.map((m,i) => `
+        <div class="mag-item${i===0?' active':''}" onclick="previewMag(${i})">
+          <div class="mag-cover" style="background:${m.bg}">${m.emoji}</div>
+          <div class="mag-meta">
+            <div class="mag-title">${m.title}</div>
+            <div class="mag-issue">${m.issue}</div>
+            <span class="mag-tag" style="background:${m.color}">${m.tag}</span>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+    <div class="mag-preview" id="mag-preview-pane"></div>
+  </div>`;
+  previewMag(0);
+}
+
+window.previewMag = function(i) {
+  const m = magazines[i];
+  const pane = document.getElementById('mag-preview-pane');
+  if (!pane) return;
+  pane.innerHTML = `
+    <div class="preview-big-cover" style="background:${m.bg}">
+      <div style="font-size:52px">${m.emoji}</div>
+      <div class="cover-text">${m.title}</div>
+    </div>
+    <div class="preview-tagline">${m.issue}</div>
+    <div class="preview-body">${m.desc}</div>
+    <button class="preview-cta">Read Issue →</button>
+  `;
+  document.querySelectorAll('.mag-item').forEach((el,idx) => el.classList.toggle('active', idx===i));
+};
+
+const films = [
+  { title: 'Dementia at 3am', dur: '18 min', type: 'Archive', badge: '#8b3a8b', emoji: '🎞', bg: 'linear-gradient(145deg,#1a0828,#100018)', note: 'Mobile archival' },
+  { title: 'Power Walks: Philadelphia', dur: '24 min', type: 'Archival', badge: '#1a8fd1', emoji: '🏙', bg: 'linear-gradient(145deg,#001a2a,#001018)', note: 'Documentary' },
+  { title: 'American Wallpaper', dur: '31 min', type: 'AI+Archive', badge: '#b8e832', emoji: '🌄', bg: 'linear-gradient(145deg,#0e1a00,#081000)', note: 'Mockumentary' },
+  { title: 'Midlife Topography', dur: '11 min', type: 'AI-gen', badge: '#f0a820', emoji: '🗺', bg: 'linear-gradient(145deg,#1a1000,#0e0800)', note: 'Generative' },
+  { title: 'The Wrong Thing', dur: '7 min', type: 'Archive', badge: '#e8391a', emoji: '📱', bg: 'linear-gradient(145deg,#2a0800,#180400)', note: 'Mobile cut' },
+  { title: 'Searchjourney: Episode 1', dur: '22 min', type: 'AI+Archive', badge: '#7ab87a', emoji: '🧭', bg: 'linear-gradient(145deg,#001a10,#000e08)', note: 'Series pilot' },
+  { title: '101 Questions', dur: '14 min', type: 'Explainer', badge: '#b8e832', emoji: '💡', bg: 'linear-gradient(145deg,#0e1400,#080e00)', note: 'Edtech format' },
+  { title: 'Plurality', dur: '42 min', type: 'Feature', badge: '#1a8fd1', emoji: '🏛', bg: 'linear-gradient(145deg,#001428,#000c18)', note: 'Feature doc' },
+  { title: 'Caregiver Nights', dur: '9 min', type: 'Archive', badge: '#8b3a8b', emoji: '🌙', bg: 'linear-gradient(145deg,#180828,#0c0418)', note: 'Mobile archival' },
+];
+
+function renderFilms(el) {
+  el.style.height = '100%';
+  el.innerHTML = `<div class="app-films">
+    <div class="films-header">
+      <div class="films-h">Archive Films</div>
+      <div class="films-count">// ${films.length} titles · pay-to-download</div>
+    </div>
+    <div class="films-grid">
+      ${films.map(f => `
+        <div class="film-card">
+          <div class="film-thumb" style="background:${f.bg}">${f.emoji}</div>
+          <div class="film-meta">
+            <div class="film-title">${f.title}</div>
+            <div class="film-dur">
+              <span>${f.dur}</span>
+              <span class="film-badge" style="background:${f.badge}20;color:${f.badge}">${f.type}</span>
+            </div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  </div>`;
+}
+
+const courseCategories = [
+  { id: 'dementia', label: 'Dementia Literacy', color: '#8b3a8b' },
+  { id: 'civic', label: 'Civic Participation', color: '#1a8fd1' },
+  { id: 'midlife', label: 'Midlife Navigation', color: '#f0a820' },
+  { id: 'media', label: 'Media Literacy', color: '#e8391a' },
+  { id: 'ai', label: 'AI & Human Design', color: '#b8e832' },
+];
+
+const courses = {
+  dementia: [
+    { n:'01', title:'What Dementia Actually Does to a Family', meta:'4 modules · 35 min', type:'explainer', desc:'A clear-eyed, no-euphemism explainer for adult children of newly diagnosed patients.' },
+    { n:'02', title:'Navigating the Healthcare System as a Caregiver', meta:'6 modules · 52 min', type:'practicum', desc:'Practical systems: paperwork, insurance, advance directives, the conversations you keep postponing.' },
+    { n:'03', title:'Dementia & the Law: What You Can Still Do Today', meta:'3 modules · 28 min', type:'micro', desc:'Power of attorney, guardianship, estate planning — in plain language, with real deadlines.' },
+  ],
+  civic: [
+    { n:'01', title:'How a Local Election Actually Works', meta:'5 modules · 40 min', type:'explainer', desc:'Precinct structure, poll workers, canvassing, turnout mechanics — the unsexy infrastructure of democracy.' },
+    { n:'02', title:'Your State Legislature: A Practicum', meta:'8 modules · 70 min', type:'practicum', desc:'Read a bill. Track a vote. Contact a rep. Attend a hearing. Do all four in eight weeks.' },
+    { n:'03', title:'Building a Civic Network in Your ZIP Code', meta:'4 modules · 32 min', type:'micro', desc:'From neighborhood association to organized precinct — small-scale civic infrastructure building.' },
+  ],
+  midlife: [
+    { n:'01', title:'The Career You Didn\'t Plan For', meta:'5 modules · 45 min', type:'explainer', desc:'Reframing reinvention: not a pivot, not a crisis. A practicum for people 40–60 renegotiating everything.' },
+    { n:'02', title:'Lifespan Management: Legacy Before Death', meta:'6 modules · 55 min', type:'practicum', desc:'What you own, what you owe, what you want remembered — and the tools to document all three.' },
+  ],
+  media: [
+    { n:'01', title:'How Algorithms Shape What You Believe', meta:'4 modules · 30 min', type:'explainer', desc:'A non-paranoid, evidence-based explainer on recommendation systems and epistemic drift.' },
+    { n:'02', title:'Building a Human-First Web Presence', meta:'7 modules · 60 min', type:'practicum', desc:'From domain to distribution — own your infrastructure. The practicum Penny Wrenn uses herself.' },
+  ],
+  ai: [
+    { n:'01', title:'AI as Infrastructure, Not Magic', meta:'5 modules · 44 min', type:'explainer', desc:'What large language models actually do — and why that matters for civic and creative work.' },
+    { n:'02', title:'Generative Media for Non-Engineers', meta:'6 modules · 52 min', type:'practicum', desc:'Use AI tools to generate, curate, and distribute content without surrendering authorship.' },
+    { n:'03', title:'Plurality by Design', meta:'3 modules · 25 min', type:'micro', desc:'The design principles behind a human-engineered internet. Theory meets practicum.' },
+  ],
+};
+
+let activeCat = 'dementia';
+
+function renderCourses(el) {
+  el.style.height = '100%';
+  el.innerHTML = `<div class="app-courses">
+    <nav class="courses-nav">
+      <div class="cn-label">// categories</div>
+      ${courseCategories.map(c => `
+        <div class="cn-item${c.id===activeCat?' active':''}" id="cn-${c.id}" onclick="switchCat('${c.id}')">
+          <div class="cn-dot" style="background:${c.color}"></div>${c.label}
+        </div>
+      `).join('')}
+    </nav>
+    <div class="courses-main" id="courses-main"></div>
+  </div>`;
+  renderCoursesMain();
+}
+
+window.switchCat = function(id) {
+  activeCat = id;
+  document.querySelectorAll('.cn-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('cn-'+id)?.classList.add('active');
+  renderCoursesMain();
+};
+
+function renderCoursesMain() {
+  const el = document.getElementById('courses-main');
+  if (!el) return;
+  const cat = courseCategories.find(c => c.id === activeCat);
+  const list = courses[activeCat] || [];
+  el.innerHTML = `
+    <div class="course-hero-label">// ${cat.label}</div>
+    <div class="course-hero-title">${cat.label}<br><em style="font-style:italic;color:${cat.color}">Practicums & Modules</em></div>
+    <div class="course-hero-sub">Niche-targeted edtech built for real people navigating real systems. Each module is subscribable, downloadable, or streamable.</div>
+    <div class="course-list">
+      ${list.map(c => `
+        <div class="course-row">
+          <div class="course-num">${c.n}</div>
+          <div class="course-info">
+            <div class="course-title">${c.title}</div>
+            <div class="course-meta"><span>${c.meta}</span></div>
+            <div style="font-size:10.5px;color:var(--os-muted);margin-top:3px;line-height:1.5;font-family:var(--font-ui)">${c.desc}</div>
+          </div>
+          <div class="course-type type-${c.type}">${c.type}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function renderCivic(el) {
+  el.style.height = '100%';
+  el.innerHTML = `<div class="app-civic">
+    <div class="civic-header">
+      <div class="civic-h">Civic OS — Plurality Dashboard</div>
+      <div class="civic-sub">// pennywrenn.net · infrastructure layer · March 2026</div>
+    </div>
+    <div class="civic-grid">
+      <div class="civic-card">
+        <div class="civic-card-accent" style="background:var(--chartreuse)"></div>
+        <div class="civic-card-title">Active Domains</div>
+        <div class="civic-card-stat">36</div>
+        <div class="civic-card-label">across 6 civic clusters</div>
+      </div>
+      <div class="civic-card">
+        <div class="civic-card-accent" style="background:var(--cerulean)"></div>
+        <div class="civic-card-title">Practicums Live</div>
+        <div class="civic-card-stat">12</div>
+        <div class="civic-card-label">modules published</div>
+      </div>
+      <div class="civic-card">
+        <div class="civic-card-accent" style="background:var(--vermillion)"></div>
+        <div class="civic-card-title">Films in Archive</div>
+        <div class="civic-card-stat">9</div>
+        <div class="civic-card-label">titles · mobile + AI-gen</div>
+      </div>
+      <div class="civic-card">
+        <div class="civic-card-accent" style="background:var(--marigold)"></div>
+        <div class="civic-card-title">Publications</div>
+        <div class="civic-card-stat">6</div>
+        <div class="civic-card-label">digital magazines</div>
+      </div>
+      <div class="civic-full">
+        <div class="civic-card-title" style="margin-bottom:8px">Domain Network · Plurality Engine</div>
+        <div class="civic-domains-row">
+          ${['pennywrenn.net','pennywrenn.org','dementiacare.network','dementia.chat','dementia.partners','power2026.com','power2026.us','searchjourney.org','101freeideas.com','101freeideas.ai','midlife.media','midlife.work','worriedaboutthewrongthing.com','pennywrenn.media','pennywrenn.blog','penrings.dad'].map(d=>`<div class="civic-domain-chip">${d}</div>`).join('')}
+        </div>
+      </div>
+      <div class="civic-full" style="border-left:3px solid var(--chartreuse);background:rgba(184,232,50,0.03)">
+        <div style="font-family:var(--font-display);font-style:italic;font-size:14px;color:var(--os-text);line-height:1.6">"The overarching purpose of every Penny Wrenn-affiliated artifact: a human-engineered internet that promotes <strong style="font-style:normal;color:var(--chartreuse)">plurality</strong> — preservation of individual, local, and national American lifespan management of life, liberty, and legacy."</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ═══════════════════════════════════════
+   CONTEXT MENU
+═══════════════════════════════════════ */
+document.addEventListener('contextmenu', e => {
+  e.preventDefault();
+  showCtx(e);
+});
+function showCtx(e, type) {
+  const m = document.getElementById('ctx-menu');
+  m.style.display = 'block';
+  const x = Math.min(e.clientX, window.innerWidth - 200);
+  const y = Math.min(e.clientY, window.innerHeight - 250);
+  m.style.left = x + 'px'; m.style.top = y + 'px';
+}
+function closeCtx() { document.getElementById('ctx-menu').style.display = 'none'; }
+document.addEventListener('click', closeCtx);
+
+/* ═══════════════════════════════════════
+   TOAST
+═══════════════════════════════════════ */
+let toastTimer;
+function showToast(id, icon, app, msg) {
+  document.getElementById('toast-icon').textContent = icon;
+  document.getElementById('toast-app').textContent = app;
+  document.getElementById('toast-msg').textContent = msg;
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 4500);
+}
+
+/* keyboard shortcuts */
+document.addEventListener('keydown', e => {
+  if (e.metaKey || e.ctrlKey) {
+    if (e.key==='p') { e.preventDefault(); openApp('mags'); }
+    if (e.key==='f') { e.preventDefault(); openApp('films'); }
+    if (e.key==='e') { e.preventDefault(); openApp('courses'); }
+    if (e.key==='g') { e.preventDefault(); openApp('civic'); }
+  }
+});
+</script>
+</body>
+</html>
